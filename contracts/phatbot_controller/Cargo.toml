@@ -1,0 +1,36 @@
+[package]
+name = "phatbot_controller"
+version = "0.1.0"
+authors = ["[your_name] <[your_email]>"]
+edition = "2021"
+
+[dependencies]
+ink = { version = "4.2.0", default-features = false }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
+primitive-types = { version = "0.12", default-features = false, features = ["codec", "scale-info"] }
+
+pink-extension = { version = "0.4", default-features = false }
+
+phatbot_profile = { path = "../../contracts/phatbot_profile", default-features = false, features = ["ink-as-dependency"] }
+
+[dev-dependencies]
+ink_e2e = "4.2.0"
+pink-extension-runtime = "0.4"
+
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+    "primitive-types/std",
+    "pink-extension/std",
+    "phatbot_profile/std",
+]
+ink-as-dependency = [ "phatbot_profile/ink-as-dependency" ]
+e2e-tests = []

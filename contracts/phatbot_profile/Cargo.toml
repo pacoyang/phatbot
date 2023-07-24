@@ -1,0 +1,44 @@
+[package]
+name = "phatbot_profile"
+version = "0.1.0"
+authors = ["[your_name] <[your_email]>"]
+edition = "2021"
+
+[dependencies]
+ink = { version = "4.2.0", default-features = false }
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
+scale-info = { version = "2.6", default-features = false, features = ["derive"], optional = true }
+primitive-types = { version = "0.12", default-features = false, features = ["codec", "scale-info"] }
+
+serde = { git = "https://github.com/kvinwang/serde.git", branch = "pink" }
+pink-json = { git = "https://github.com/Phala-Network/pink-json.git", branch = "pink", default-features = false, features = ["de-number-as-str"] }
+pink-extension = { version = "0.4", default-features = false }
+pink-web3 = { version = "0.20", default-features = false, features = ["pink", "signing"] }
+
+ethabi = { version = "18", default-features = false, features = ["serde", "rlp"]}
+hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+ink_e2e = "4.2.0"
+pink-extension-runtime = "0.4"
+
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["std"]
+std = [
+    "ink/std",
+    "scale/std",
+    "scale-info/std",
+    "primitive-types/std",
+    "pink-extension/std",
+    "pink-web3/std",
+    "pink-json/std",
+]
+ink-as-dependency = []
+e2e-tests = []
+
+[profile.release]
+overflow-checks = false
