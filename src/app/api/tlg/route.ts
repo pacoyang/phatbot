@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     await bot.sendMessage(tg_id as number, `minting...`)
     await kv.hset(TG_ID_MINTING_KEY, { [tg_id as number]: 1 })
     const data = await mint(process.env.CONTROLLER_CONTRACT_ID || '', (result as string).split(':')[1])
-    await kv.hdel(tg_id)
+    await kv.hdel(TG_ID_MINTING_KEY, tg_id)
     if (data['err']) {
       await bot.sendMessage(tg_id as number, data['err'])
       return NextResponse.json({})
