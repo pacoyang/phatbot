@@ -236,12 +236,6 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
     }
     setIsLoading(true)
     try {
-      const api = await ApiPromise.create(
-        options({
-          provider: new WsProvider('wss://poc5.phala.network/ws'),
-          noInitWarn: true,
-        })
-      )
       const phatRegistry = await OnChainRegistry.create(api)
       const blueprint = new PinkBlueprintPromise(
         phatRegistry.api,
