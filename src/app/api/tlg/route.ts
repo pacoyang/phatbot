@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       bot.sendMessage(tg_id as number, 'Please create wallet first')
       return NextResponse.json({})
     }
-    const data = await mint('0x5a4509a4fcf988d50c4e068f35af4a0394e7f5253777df68f3aacfca9e46672f', (result as string).split(':')[1])
+    const data = await mint('0x32ac2b5b8db9fb2df60f7580e8f99648657676cafc2765244289294181ab86fb', (result as string).split(':')[1])
     if (data['err']) {
       bot.sendMessage(tg_id as number, data['err'])
       return NextResponse.json({})

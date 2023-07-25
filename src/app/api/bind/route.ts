@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   }
   try {
     const address = await get_evm_address(contractId)
-    bot.sendMessage(tg_id as number, `Your wallet address: ${address}`)
+    bot.sendMessage(tg_id as number, `Your wallet address: ${address}\ncontractId: ${contractId}`)
     await kv.del(token)
     await kv.hset(TG_ID_CONTRACT_KEY, { [tg_id as number]: `${address}:${contractId}` })
     return NextResponse.json({
