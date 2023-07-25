@@ -6,6 +6,6 @@ import { TG_ID_CONTRACT_KEY } from '@/constants'
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const text = await request.text()
-  bot.sendMessage(params.id, text)
+  await bot.sendMessage(params.id, text)
   return NextResponse.json({})
 }

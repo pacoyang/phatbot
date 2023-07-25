@@ -18,11 +18,17 @@ export async function POST(request: NextRequest) {
     if (result) {
       const address = (result as string).split(':')[0]
       const contractId = (result as string).split(':')[1]
-      bot.sendMessage(tg_id as number, `Your wallet address: ${address}\ncontractId:${contractId}`)
+      await bot.sendMessage(
+        tg_id as number,
+        `Your wallet address:\n${'`' + address + '`'}\nYour Phat contract id:\n${'`' + contractId + '`'}`,
+        {
+          parse_mode : 'Markdown',
+        },
+      )
       return NextResponse.json({})
     }
     await kv.set(token, message.from.id, { ex: 3600, nx: true })
-    bot.sendMessage(message.chat.id, `Welcome ${message.from.first_name}\n⚡ Click the button below to redirect to the webpage and create a wallet. ⚡`, {
+    await bot.sendMessage(message.chat.id, `Welcome ${message.from.first_name}\n⚡ Click the button below to redirect to the webpage and create a wallet. ⚡`, {
       parse_mode : 'Markdown',
       reply_markup : {
         inline_keyboard: [
@@ -39,15 +45,15 @@ export async function POST(request: NextRequest) {
     const tg_id = message.from.id
     const result = await kv.hget(TG_ID_CONTRACT_KEY, tg_id)
     if (!result) {
-      bot.sendMessage(tg_id as number, 'Please create wallet first')
+      await bot.sendMessage(tg_id as number, 'Please create wallet first')
       return NextResponse.json({})
     }
     const data = await mint('0x32ac2b5b8db9fb2df60f7580e8f99648657676cafc2765244289294181ab86fb', (result as string).split(':')[1])
     if (data['err']) {
-      bot.sendMessage(tg_id as number, data['err'])
+      await bot.sendMessage(tg_id as number, data['err'])
       return NextResponse.json({})
     }
-    bot.sendMessage(tg_id as number, `Successfully sent tx:\nhttps://mumbai.polygonscan.com/tx/${data['ok']}`)
+    await bot.sendMessage(tg_id as number, `Successfully sent tx:\nhttps://mumbai.polygonscan.com/tx/${data['ok']}`)
   }
   return NextResponse.json({})
 }

@@ -8,9 +8,7 @@ export async function POST(request: NextRequest) {
   const text = await request.text()
   const data = await kv.hgetall(TG_ID_CONTRACT_KEY)
   if (data && text) {
-    for (const tg_id of Object.keys(data)) {
-      bot.sendMessage(tg_id, text)
-    }
+    await Promise.all(Object.keys(data).map((tg_id: any) => bot.sendMessage(tg_id, text)))
   }
   return NextResponse.json({})
 }
