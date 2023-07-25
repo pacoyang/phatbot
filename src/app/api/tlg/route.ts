@@ -6,7 +6,7 @@ import fs from 'fs'
 import path from 'path'
 
 import bot from '@/bot'
-import { RPC_TESTNET_URL, TG_ID_CONTRACT_KEY } from '@/constants'
+import { RPC_TESTNET_URL, TG_ID_CONTRACT_KEY, TG_ID_MINTING_KEY } from '@/constants'
 
 export async function POST(request: NextRequest) {
   const { message } = await request.json()
@@ -48,7 +48,15 @@ export async function POST(request: NextRequest) {
       await bot.sendMessage(tg_id as number, 'Please create wallet first')
       return NextResponse.json({})
     }
+    const result2 = await kv.hget(TG_ID_MINTING_KEY, tg_id)
+    if (result2) {
+      await bot.sendMessage(tg_id as number, `minting...`)
+      return NextResponse.json({})
+    }
+    await bot.sendMessage(tg_id as number, `minting...`)
+    await kv.hset(TG_ID_MINTING_KEY, { [tg_id as number]: 1 })
     const data = await mint(process.env.CONTROLLER_CONTRACT_ID || '', (result as string).split(':')[1])
+    await kv.hdel(tg_id)
     if (data['err']) {
       await bot.sendMessage(tg_id as number, data['err'])
       return NextResponse.json({})
@@ -67,7 +75,7 @@ async function mint(contractId: string, phatbotProfile: string) {
   const keyring = new Keyring({ type: 'sr25519' })
   const pair = keyring.addFromUri(process.env.POLKADOT_PRIMARY_KEY!)
   const abi = JSON.parse(
-    fs.readFileSync(path.join(process.cwd(), 'contracts/phatbot_controller/target/ink/phatbot_controller.json'), 'utf-8')
+    fs.readFileSync(path.join(process.cwd(), 'src/phatbot_controller.json'), 'utf-8')
   )
   const contractKey = await phatRegistry.getContractKeyOrFail(contractId)
   const contract = new PinkContractPromise(api, phatRegistry, abi, contractId, contractKey)
