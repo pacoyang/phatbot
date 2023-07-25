@@ -245,6 +245,13 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
       )
       const cert = await signCertificate({ signer, account, api })
       console.info(cert, process.env.NEXT_PUBLIC_CONTROLLER_ACCOUNT_ID)
+      // transfer 0.1 to cluster
+      const { address } = currentAccount
+      const rounded = Number(new Decimal(0.1).mul(1e12).toFixed(0)) + 1
+      await signAndSend(phatRegistry.transferToCluster(address, rounded), address, signer)
+      // @FIXME wait for next block
+      await new Promise(resolve => setTimeout(resolve, 5000))
+
       const { gasRequired, storageDeposit } = await blueprint.query.new(
         account.address,
         { cert },
