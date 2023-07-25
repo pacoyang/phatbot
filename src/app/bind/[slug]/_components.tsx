@@ -236,6 +236,12 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
     }
     setIsLoading(true)
     try {
+      const api = await ApiPromise.create(
+        options({
+          provider: new WsProvider('wss://poc5.phala.network/ws'),
+          noInitWarn: true,
+        })
+      )
       const phatRegistry = await OnChainRegistry.create(api)
       const blueprint = new PinkBlueprintPromise(
         phatRegistry.api,
@@ -327,7 +333,7 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
             <div>Balance: {balance[0]}{balance[1] ? `.${balance[1]}` : ''}PHA</div>
           ) : null
         }
-        {profile.connected && !evmAddress ? (
+        {initialized && profile.connected && !evmAddress ? (
           <Button
             colorScheme="telegram"
             onClick={handleCreate}
@@ -336,7 +342,7 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
             Create EVM Wallet
           </Button>
         ) : null}
-        {profile.connected && !evmAddress ? (
+        {initialized && profile.connected && !evmAddress ? (
           <Button
             onClick={handleGetTestCoin}
             isLoading={isGetting}
