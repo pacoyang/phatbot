@@ -25,6 +25,7 @@ mod phatbot_profile {
     #[ink(storage)]
     pub struct PhatbotProfile {
         owner: AccountId,
+        admin: AccountId,
         tg_id: u64,
         evm_account: ExternalAccount,
     }
@@ -61,7 +62,7 @@ mod phatbot_profile {
 
     impl PhatbotProfile {
         #[ink(constructor)]
-        pub fn new(tg_id: u64) -> Self {
+        pub fn new(tg_id: u64, admin: AccountId) -> Self {
             let random = signing::derive_sr25519_key(&tg_id.to_be_bytes());
             let sk = random[..32].try_into().unwrap();
             let evm_account = ExternalAccount {
@@ -71,6 +72,7 @@ mod phatbot_profile {
             };
             Self {
                 tg_id,
+                admin,
                 evm_account,
                 owner: Self::env().caller(),
             }
@@ -96,6 +98,9 @@ mod phatbot_profile {
 
         #[ink(message)]
         pub fn mint(&self, gas: U256) -> Result<H256> {
+            if self.env().caller() != self.admin {
+                return Err(Error::BadOrigin);
+            }
             let address = self.get_evm_account_address().unwrap();
             let params = vec![address.as_bytes().to_vec()];
             let tx = self
@@ -213,7 +218,7 @@ mod phatbot_profile {
         #[ink::test]
         fn it_works() {
             pink_extension_runtime::mock_ext::mock_all_ext();
-            let phatbot_profile = PhatbotProfile::new(347828988);
+            let phatbot_profile = PhatbotProfile::new(347828988, AccountId::from([1u8; 32]));
             let result = phatbot_profile.get_evm_account_address();
             assert!(result.is_ok());
         }
@@ -221,7 +226,7 @@ mod phatbot_profile {
         #[ink::test]
         fn build_transaction_works() {
             pink_extension_runtime::mock_ext::mock_all_ext();
-            let phatbot_profile = PhatbotProfile::new(347828988);
+            let phatbot_profile = PhatbotProfile::new(347828988, AccountId::from([1u8; 32]));
             let address = phatbot_profile.get_evm_account_address().unwrap();
             println!("address: {:?}", address);
             let tx = phatbot_profile.mint(U256::from(70_000)).unwrap();

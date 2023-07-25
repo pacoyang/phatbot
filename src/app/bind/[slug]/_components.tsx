@@ -32,7 +32,7 @@ import {
   signCertificate,
 } from '@phala/sdk'
 
-import contract from './phatbot_profile.json'
+import contract from '../../../phatbot_profile.json'
 import signAndSend from './signAndSend'
 
 export interface InjectedAccountWithMetaAndName
@@ -197,11 +197,12 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
         contract.source.hash
       )
       const cert = await signCertificate({ signer, account, api })
-      console.info(cert)
+      console.info(cert, process.env.NEXT_PUBLIC_CONTROLLER_ACCOUNT_ID)
       const { gasRequired, storageDeposit } = await blueprint.query.new(
         account.address,
         { cert },
-        tg_id
+        tg_id,
+        process.env.NEXT_PUBLIC_CONTROLLER_ACCOUNT_ID,
       )
       console.info(gasRequired, storageDeposit)
       // @ts-ignore
@@ -214,7 +215,8 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
               ? storageDeposit.asCharge
               : null,
           },
-          tg_id
+          tg_id,
+          process.env.NEXT_PUBLIC_CONTROLLER_ACCOUNT_ID,
         ),
         currentAccount.address,
         signer

@@ -68,6 +68,11 @@ mod phatbot_controller {
         }
 
         #[ink(message)]
+        pub fn get_account_id(&self) -> AccountId {
+            self.env().account_id()
+        }
+
+        #[ink(message)]
         pub fn get_evm_account_address(&self, phatbot_profile: AccountId) -> Result<H160> {
             self.ensure_owner()?;
             let from_address = build_call::<DefaultEnvironment>()

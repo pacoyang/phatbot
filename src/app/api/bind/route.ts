@@ -17,7 +17,7 @@ const get_evm_address = async (contractId: string) => {
   const keyring = new Keyring({ type: 'sr25519' })
   const pair = keyring.addFromUri(process.env.POLKADOT_PRIMARY_KEY!)
   const abi = JSON.parse(
-    fs.readFileSync(path.join(process.cwd(), 'contracts/phatbot_profile/target/ink/phatbot_profile.json'), 'utf-8')
+    fs.readFileSync(path.join(process.cwd(), 'src/phatbot_profile.json'), 'utf-8')
   )
   const contractKey = await phatRegistry.getContractKeyOrFail(contractId)
   const contract = new PinkContractPromise(api, phatRegistry, abi, contractId, contractKey)
@@ -41,7 +41,13 @@ export async function POST(request: NextRequest) {
   }
   try {
     const address = await get_evm_address(contractId)
-    bot.sendMessage(tg_id as number, `Your wallet address: ${address}\ncontractId: ${contractId}`)
+    await bot.sendMessage(
+      tg_id as number,
+      `Your wallet address:\n${'`' + address + '`'}\nYour Phat contract id:\n${'`' + contractId + '`'}`,
+      {
+        parse_mode : 'Markdown',
+      },
+    )
     await kv.del(token)
     await kv.hset(TG_ID_CONTRACT_KEY, { [tg_id as number]: `${address}:${contractId}` })
     return NextResponse.json({

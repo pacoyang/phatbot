@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x31b46ad39217154ed2d3e03a24fb5b0494161e6e61384e9df456ee7111dc79d3",
+    "hash": "0x4d12c8cdc5626c6df6287b3940c11a97b36b46dbf919acb9d5e018427154329f",
     "language": "ink! 4.2.1",
     "compiler": "rustc 1.69.0",
     "build_info": {
@@ -31,6 +31,15 @@
                 "u64"
               ],
               "type": 3
+            }
+          },
+          {
+            "label": "admin",
+            "type": {
+              "displayName": [
+                "AccountId"
+              ],
+              "type": 0
             }
           }
         ],
@@ -186,6 +195,15 @@
                 }
               },
               "name": "owner"
+            },
+            {
+              "layout": {
+                "leaf": {
+                  "key": "0x00000000",
+                  "ty": 0
+                }
+              },
+              "name": "admin"
             },
             {
               "layout": {
