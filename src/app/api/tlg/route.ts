@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (result) {
       const address = (result as string).split(':')[0]
       const contractId = (result as string).split(':')[1]
-      bot.sendMessage(tg_id as number, `Your wallet address: ${address}\contractId:${contractId}`)
+      bot.sendMessage(tg_id as number, `Your wallet address: ${address}\ncontractId:${contractId}`)
       return NextResponse.json({})
     }
     await kv.set(token, message.from.id, { ex: 3600, nx: true })
