@@ -8,7 +8,8 @@ import type { PropsWithChildren } from 'react'
 import { useAtom, atom, useAtomValue, useSetAtom } from 'jotai'
 import { atomWithStorage, RESET } from 'jotai/utils'
 import { ApiPromise, WsProvider } from '@polkadot/api'
-import { Keyring } from '@polkadot/ui-keyring'
+import { Keyring as UIKeyring } from '@polkadot/ui-keyring'
+import { Keyring } from '@polkadot/keyring'
 import { decodeAddress } from '@polkadot/util-crypto'
 import { fromPairs, path, find, map, toPairs, propOr } from 'ramda'
 import {
@@ -31,6 +32,7 @@ import {
   PinkBlueprintPromise,
   signCertificate,
 } from '@phala/sdk'
+import Decimal from 'decimal.js'
 
 import contract from '../../../phatbot_profile.json'
 import signAndSend from './signAndSend'
@@ -52,20 +54,20 @@ export const lastSelectedAccountAddressAtom = atomWithStorage(
 )
 export const selectedWeb3ProviderAtom = atom('')
 
-const keyringInternalAtom = atom<Keyring | null>(null)
+const keyringInternalAtom = atom<UIKeyring | null>(null)
 export const keyringInstanceAtom = atom(
   (get) => get(keyringInternalAtom),
   async (get, set, action) => {
     const instance = get(keyringInternalAtom)
     if (action === RESET && !instance) {
-      const keyring = new Keyring()
+      const keyring = new UIKeyring()
       keyring.loadAll({ isDevelopment: false })
       set(keyringInternalAtom, keyring)
     }
   }
 )
 
-const getAllAcountsForProvider = async (name: string, keyring: Keyring) => {
+const getAllAcountsForProvider = async (name: string, keyring: UIKeyring) => {
   await new Promise((resolve) => setTimeout(resolve, 2000))
   const provider: InjectedWindowProvider | undefined = path(
     ['injectedWeb3', name],
@@ -166,6 +168,18 @@ export const signerAtom = atom(async (get) => {
   }
 })
 
+type BalancePair = Pairs<string | null, string | null>
+
+export function transformBalance(value: Decimal): BalancePair {
+  const formatter = new Intl.NumberFormat('en-US')
+  const parts = formatter.format(value.toNumber()).split('.')
+  if (parts.length === 2) {
+    return [parts[0], `${parts[1]}`] as BalancePair
+  } else {
+    return [parts[0], null] as BalancePair
+  }
+}
+
 export function Section({ tg_id, token }: { tg_id: number, token: string }) {
   useRestoreLastSelectedAccount()
   const profile = useAtomValue(currentProfileAtom)
@@ -173,22 +187,55 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
 
   const currentAccount = useAtomValue(currentAccountAtom)
   const [isLoading, setIsLoading] = useState(false)
+  const [isGetting, setIsGetting] = useState(false)
   const signer = useAtomValue(signerAtom)
   const account = useAtomValue(currentAccountAtom)
   const [evmAddress, setEvmAddress] = useState('')
+  const [api, setApi] = useState<ApiPromise>()
+  const [initialized, setInitialized] = useState<boolean>(false)
+  const [balance, setBalance] = useState<[string | null, string | null]>([null, null])
 
-  const handleCreate = async () => {
-    if (!currentAccount || !account || !signer) {
-      return
-    }
-    setIsLoading(true)
-    try {
-      const api = await ApiPromise.create(
+  useEffect(() => {
+    (async () => {
+      const _api = await ApiPromise.create(
         options({
           provider: new WsProvider('wss://poc5.phala.network/ws'),
           noInitWarn: true,
         })
       )
+      setApi(_api)
+      await _api.isReady
+      setInitialized(true)
+    })()
+  }, [])
+
+  useEffect(() => {
+    if (currentAccount && api && initialized) {
+      (async () => {
+        const balance: any = await api.query.system.account(currentAccount.address)
+        const [whole, fragction] = formatBalance(api, balance)
+        setBalance([whole, fragction])
+      })()
+    }
+  }, [currentAccount, initialized, api])
+
+  const formatBalance = (api: ApiPromise, balance: any) => {
+    const { data: { free: freeBalance } } = balance
+    const multiplier = new Decimal(10).pow(api.registry.chainDecimals[0])
+    const value = new Decimal(freeBalance.toString() || '0').div(multiplier)
+    return transformBalance(value)
+  }
+
+  const handleCreate = async () => {
+    if (!currentAccount || !account || !signer || !api) {
+      return
+    }
+    if (balance[0] === null || balance[0] === '0') {
+      alert('Please click the button below to get some PHA first!')
+      return
+    }
+    setIsLoading(true)
+    try {
       const phatRegistry = await OnChainRegistry.create(api)
       const blueprint = new PinkBlueprintPromise(
         phatRegistry.api,
@@ -243,14 +290,43 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
     }
   }
 
+  const handleGetTestCoin = async () => {
+    if (!api || !currentAccount || !account) {
+      return
+    }
+    setIsGetting(true)
+    const keyring = new Keyring({ type: 'sr25519' })
+    const pair = keyring.addFromUri('//Alice')
+    await api.tx.balances.transferKeepAlive(account?.address, '100000000000000')
+      .signAndSend(pair, { nonce: -1 })
+    while (true) {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const _balance: any = await api.query.system.account(currentAccount.address)
+      const [whole, fragction] = formatBalance(api, _balance)
+      if (whole !== balance[0]) {
+        setBalance([whole, fragction])
+        break
+      }
+    }
+    setIsGetting(false)
+  }
+
   return (
     <ChakraProvider>
       <section className="flex flex-col gap-6 w-full">
-        <Button onClick={() => setWalletSelectModalVisible(true)}>
+        <Button
+          isLoading={!initialized}
+          onClick={() => setWalletSelectModalVisible(true)}
+        >
           {!profile.connected
             ? 'Connect Wallet'
             : `Current Account: ${profile.displayName}`}
         </Button>
+        {
+          profile.connected && balance && balance[0] !== null ? (
+            <div>Balance: {balance[0]}{balance[1] ? `.${balance[1]}` : ''}PHA</div>
+          ) : null
+        }
         {profile.connected && !evmAddress ? (
           <Button
             colorScheme="telegram"
@@ -258,6 +334,14 @@ export function Section({ tg_id, token }: { tg_id: number, token: string }) {
             isLoading={isLoading}
           >
             Create EVM Wallet
+          </Button>
+        ) : null}
+        {profile.connected && !evmAddress ? (
+          <Button
+            onClick={handleGetTestCoin}
+            isLoading={isGetting}
+          >
+            Get Test-PHA
           </Button>
         ) : null}
         {
