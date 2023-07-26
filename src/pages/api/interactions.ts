@@ -21,9 +21,7 @@ export default async function handler(
   request: NextRequest,
   context: NextFetchEvent,
 ) {
-  console.info(context)
   const json = await request.json()
-  console.info(json)
   const { type, data, member, token } = json
   if (type === InteractionType.PING) {
     return NextResponse.json({ type: InteractionResponseType.PONG })
