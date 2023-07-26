@@ -1,9 +1,9 @@
-import { fetch, ProxyAgent, setGlobalDispatcher } from 'undici'
-
-if (process.env.PROXY_AGENT) {
-  const proxyAgent = new ProxyAgent(process.env.PROXY_AGENT)
-  setGlobalDispatcher(proxyAgent)
-}
+// import { fetch, ProxyAgent, setGlobalDispatcher } from 'undici'
+// 
+// if (process.env.PROXY_AGENT) {
+//   const proxyAgent = new ProxyAgent(process.env.PROXY_AGENT)
+//   setGlobalDispatcher(proxyAgent)
+// }
 
 export async function requestDiscord(uri: string, options: any) {
   const url = `https://discord.com/api/v10${uri}`
