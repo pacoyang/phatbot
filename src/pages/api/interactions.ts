@@ -12,9 +12,10 @@ import { generateToken, mint } from '@/utils'
 
 export const config = {
   runtime: 'edge',
+  unstable_allowDynamic: [
+    '/node_modules/@phala/sdk/**',
+  ],
 }
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default async function handler(
   request: NextRequest,
