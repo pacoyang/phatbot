@@ -26,7 +26,7 @@ mod phatbot_profile {
     pub struct PhatbotProfile {
         owner: AccountId,
         admin: AccountId,
-        tg_id: u64,
+        tg_id: String,
         evm_account: ExternalAccount,
     }
 
@@ -62,8 +62,8 @@ mod phatbot_profile {
 
     impl PhatbotProfile {
         #[ink(constructor)]
-        pub fn new(tg_id: u64, admin: AccountId) -> Self {
-            let random = signing::derive_sr25519_key(&tg_id.to_be_bytes());
+        pub fn new(tg_id: String, admin: AccountId) -> Self {
+            let random = signing::derive_sr25519_key(tg_id.as_bytes());
             let sk = random[..32].try_into().unwrap();
             let evm_account = ExternalAccount {
                 sk,
@@ -79,9 +79,9 @@ mod phatbot_profile {
         }
 
         #[ink(message)]
-        pub fn get_tg_id(&self) -> Result<u64> {
+        pub fn get_tg_id(&self) -> Result<String> {
             self.ensure_owner()?;
-            Ok(self.tg_id)
+            Ok(self.tg_id.clone())
         }
 
         #[ink(message)]

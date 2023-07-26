@@ -1,18 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { kv } from '@vercel/kv'
-import { ApiPromise, WsProvider, Keyring } from '@polkadot/api'
-import { options, OnChainRegistry, signCertificate, PinkContractPromise } from '@phala/sdk'
-import fs from 'fs'
-import path from 'path'
 
 import bot from '@/bot'
-import { RPC_TESTNET_URL, TG_ID_CONTRACT_KEY, TG_ID_MINTING_KEY } from '@/constants'
+import { TG_ID_CONTRACT_KEY, TG_ID_MINTING_KEY } from '@/constants'
+import { generateToken, mint } from '@/utils'
 
 export async function POST(request: NextRequest) {
   const { message } = await request.json()
   console.info(message)
   if (message && message.text === '/start') {
-    const token = generateToken(16)
     const tg_id = message.from.id
     const result = await kv.hget(TG_ID_CONTRACT_KEY, tg_id)
     if (result) {
@@ -27,6 +23,7 @@ export async function POST(request: NextRequest) {
       )
       return NextResponse.json({})
     }
+    const token = generateToken(16)
     await kv.set(token, message.from.id, { ex: 3600, nx: true })
     await bot.sendMessage(message.chat.id, `Welcome ${message.from.first_name}\n⚡ Click the button below to redirect to the webpage and create a wallet. ⚡`, {
       parse_mode : 'Markdown',
@@ -50,10 +47,10 @@ export async function POST(request: NextRequest) {
     }
     const result2 = await kv.hget(TG_ID_MINTING_KEY, tg_id)
     if (result2) {
-      await bot.sendMessage(tg_id as number, `minting...`)
+      await bot.sendMessage(tg_id as number, 'minting...')
       return NextResponse.json({})
     }
-    await bot.sendMessage(tg_id as number, `minting...`)
+    await bot.sendMessage(tg_id as number, 'minting...')
     await kv.hset(TG_ID_MINTING_KEY, { [tg_id as number]: 1 })
     const data = await mint(process.env.CONTROLLER_CONTRACT_ID || '', (result as string).split(':')[1])
     await kv.hdel(TG_ID_MINTING_KEY, tg_id)
@@ -65,36 +62,3 @@ export async function POST(request: NextRequest) {
   }
   return NextResponse.json({})
 }
-
-async function mint(contractId: string, phatbotProfile: string) {
-  const api = await ApiPromise.create(options({
-    provider: new WsProvider(RPC_TESTNET_URL),
-    noInitWarn: true,
-  }))
-  const phatRegistry = await OnChainRegistry.create(api)
-  const keyring = new Keyring({ type: 'sr25519' })
-  const pair = keyring.addFromUri(process.env.POLKADOT_PRIMARY_KEY!)
-  const abi = JSON.parse(
-    fs.readFileSync(path.join(process.cwd(), 'src/phatbot_controller.json'), 'utf-8')
-  )
-  const contractKey = await phatRegistry.getContractKeyOrFail(contractId)
-  const contract = new PinkContractPromise(api, phatRegistry, abi, contractId, contractKey)
-  const cert = await signCertificate({ pair, api });
-  const { result, output } = await contract.query.mint(pair.address, { cert }, phatbotProfile, '100000')
-  if (!result.isOk) {
-    return { err: 'Server unreachable.' }
-  }
-  const data = output!.toJSON() as any
-  return data['ok']
-}
-
-function generateToken(length: number) {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let token = ''
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * chars.length)
-    token += chars[randomIndex]
-  }
-  return token
-}
-

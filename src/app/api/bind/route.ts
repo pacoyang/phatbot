@@ -5,8 +5,9 @@ import { options, OnChainRegistry, signCertificate, PinkContractPromise } from '
 import fs from 'fs'
 import path from 'path'
 
+import { requestDiscord } from '@/discord'
 import bot from '@/bot'
-import { RPC_TESTNET_URL, TG_ID_CONTRACT_KEY } from '@/constants'
+import { RPC_TESTNET_URL, TG_ID_CONTRACT_KEY, DC_ID_CONTRACT_KEY } from '@/constants'
 
 const get_evm_address = async (contractId: string) => {
   const api = await ApiPromise.create(options({
@@ -35,21 +36,47 @@ const get_evm_address = async (contractId: string) => {
 
 export async function POST(request: NextRequest) {
   const { token, contractId } = await request.json()
-  const tg_id = await kv.get(token)
-  if (!tg_id) {
+  const raw = await kv.get(token)
+  if (!raw) {
     return NextResponse.json({ message: 'tg_id not found.' }, { status: 404 })
   }
+  console.info(raw)
   try {
     const address = await get_evm_address(contractId)
-    await bot.sendMessage(
-      tg_id as number,
-      `Your wallet address:\n${'`' + address + '`'}\nYour Phat contract id:\n${'`' + contractId + '`'}`,
-      {
-        parse_mode : 'Markdown',
-      },
-    )
     await kv.del(token)
-    await kv.hset(TG_ID_CONTRACT_KEY, { [tg_id as number]: `${address}:${contractId}` })
+    if ((raw as string).startsWith('dc:')) {
+      const dc_id = (raw as string).replace('dc:', '')
+      await kv.hset(DC_ID_CONTRACT_KEY, { [dc_id]: `${address}:${contractId}` })
+      const res = await requestDiscord(
+        '/users/@me/channels',
+        {
+          method: 'POST',
+          body: {
+            recipient_id: dc_id
+          }
+        }
+      )
+      const channel: any = await res.json()
+      await requestDiscord(
+        `/channels/${channel.id}/messages`,
+        {
+          method: 'POST',
+          body: {
+            content: `Your wallet address:\n${'`' + address + '`'}\nYour Phat contract id:\n${'`' + contractId + '`'}`,
+          }
+        },
+      )
+    } else {
+      const tg_id = raw as string
+      await bot.sendMessage(
+        tg_id,
+        `Your wallet address:\n${'`' + address + '`'}\nYour Phat contract id:\n${'`' + contractId + '`'}`,
+        {
+          parse_mode : 'Markdown',
+        },
+      )
+      await kv.hset(TG_ID_CONTRACT_KEY, { [tg_id]: `${address}:${contractId}` })
+    }
     return NextResponse.json({
       address,
     })

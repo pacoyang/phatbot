@@ -2,7 +2,7 @@ import { kv } from '@vercel/kv'
 import { Section } from './_components'
 
 export default async function Page({ params }: { params: { slug: string } }) {
-  const tg_id = await kv.get(params.slug)
+  let tg_id = await kv.get(params.slug)
   if (!tg_id) {
     return (
       <main className="min-h-screenw-full max-w-3xl mx-auto py-16 px-8">
@@ -10,9 +10,10 @@ export default async function Page({ params }: { params: { slug: string } }) {
       </main>
     )
   }
+  tg_id = (tg_id as string).replace('dc:', '')
   return (
     <main className="min-h-screenw-full max-w-3xl mx-auto py-16 px-8">
-      <Section tg_id={tg_id as number} token={params.slug} />
+      <Section tg_id={parseInt(tg_id as string, 10)} token={params.slug} />
     </main>
   )
 }
