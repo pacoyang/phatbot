@@ -1,11 +1,11 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server'
 import { kv } from '@vercel/kv'
 import {
   InteractionType,
   InteractionResponseType,
 } from 'discord-interactions'
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest, context: NextFetchEvent) {
   const json = await request.json()
   console.info(json)
   const { type, data, member, token } = json
@@ -15,22 +15,24 @@ export async function POST(request: NextRequest) {
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data
     if (name === 'start') {
+      context.waitUntil(
+        fetch(
+          `${request.nextUrl.protocol}//${request.headers.get('host')}/api/run`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              interaction_token: token,
+              type: 'start',
+              user_id: member.user.id,
+              user_name: member.user.global_name,
+            })
+          }
+        ),
+      )
       // await Promise.race([
-      //   fetch(
-      //     `${request.nextUrl.protocol}//${request.headers.get('host')}/api/run`,
-      //     {
-      //       method: 'POST',
-      //       headers: {
-      //         'Content-Type': 'application/json',
-      //       },
-      //       body: JSON.stringify({
-      //         interaction_token: token,
-      //         type: 'start',
-      //         user_id: member.user.id,
-      //         user_name: member.user.global_name,
-      //       })
-      //     }
-      //   ),
       //   new Promise((resolve) => setTimeout(resolve, 5000))
       // ])
       return NextResponse.json({
