@@ -15,22 +15,24 @@ export async function POST(request: NextRequest) {
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data
     if (name === 'start') {
-      fetch(
-        `${request.nextUrl.protocol}//${request.headers.get('host')}/api/run`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            interaction_token: token,
-            type: 'start',
-            user_id: member.user.id,
-            user_name: member.user.global_name,
-          })
-        }
-      )
-      await new Promise((resolve) => setTimeout(resolve, 5000))
+      // await Promise.race([
+      //   fetch(
+      //     `${request.nextUrl.protocol}//${request.headers.get('host')}/api/run`,
+      //     {
+      //       method: 'POST',
+      //       headers: {
+      //         'Content-Type': 'application/json',
+      //       },
+      //       body: JSON.stringify({
+      //         interaction_token: token,
+      //         type: 'start',
+      //         user_id: member.user.id,
+      //         user_name: member.user.global_name,
+      //       })
+      //     }
+      //   ),
+      //   new Promise((resolve) => setTimeout(resolve, 5000))
+      // ])
       return NextResponse.json({
         type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
