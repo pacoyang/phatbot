@@ -6,7 +6,6 @@ import { DC_ID_CONTRACT_KEY, DC_ID_MINTING_KEY } from '@/constants'
 import { generateToken, mint } from '@/utils'
 
 const respond = async (interaction_token: string, content: string) => {
-  console.info(`/webhooks/${process.env.DISCORD_APP_ID}/${interaction_token}/messages/@original`)
   await requestDiscord(
     `/webhooks/${process.env.DISCORD_APP_ID}/${interaction_token}/messages/@original`,
     {

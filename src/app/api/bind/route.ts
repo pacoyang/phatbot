@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
   if (!raw) {
     return NextResponse.json({ message: 'tg_id not found.' }, { status: 404 })
   }
-  console.info(raw)
   try {
     const address = await get_evm_address(contractId)
     await kv.del(token)
