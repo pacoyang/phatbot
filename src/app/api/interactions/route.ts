@@ -6,9 +6,7 @@ import {
   InteractionResponseType,
 } from 'discord-interactions'
 
-export const config = {
-  runtime: 'edge',
-}
+export const runtime = 'edge'
 
 export async function POST(request: NextRequest, context: RequestContext) {
   const json = await request.json()
