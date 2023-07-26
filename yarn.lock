@@ -1821,6 +1821,11 @@
   dependencies:
     isomorphic-fetch "^3.0.0"
 
+"@vercel/edge@^0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@vercel/edge/-/edge-0.3.4.tgz#4b88bc202e1ba3b70096b588219b57fe82c4a5de"
+  integrity sha512-dFU+yAUDQRwpuRGxRDlEO1LMq0y1LGsBgkyryQWe4w15/Fy2/lCnpvdIoAhHl3QvIGAxCLHzwRHsqfLRdpxgJQ==
+
 "@vercel/kv@^0.2.2":
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@vercel/kv/-/kv-0.2.2.tgz#4b01c2bfd0aad674598b4d89a38a9454fa945a15"

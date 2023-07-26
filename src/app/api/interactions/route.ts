@@ -1,12 +1,18 @@
-import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
+import type { RequestContext } from '@vercel/edge'
 import { kv } from '@vercel/kv'
 import {
   InteractionType,
   InteractionResponseType,
 } from 'discord-interactions'
 
-export async function POST(request: NextRequest, context: NextFetchEvent) {
+export const config = {
+  runtime: 'edge',
+}
+
+export async function POST(request: NextRequest, context: RequestContext) {
   const json = await request.json()
+  console.info(context)
   console.info(json)
   const { type, data, member, token } = json
   if (type === InteractionType.PING) {
