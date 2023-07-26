@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
           })
         }
       )
+      await new Promise((resolve) => setTimeout(resolve, 5000))
       return NextResponse.json({
         type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
