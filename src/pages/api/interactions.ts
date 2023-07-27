@@ -15,7 +15,7 @@ export default async function handler(
 ) {
   const json = await request.json()
   console.info(json)
-  const { type, data, member, token } = json
+  const { type, data, user, token } = json
   if (type === InteractionType.PING) {
     return NextResponse.json({ type: InteractionResponseType.PONG })
   }
@@ -33,8 +33,8 @@ export default async function handler(
             body: JSON.stringify({
               interaction_token: token,
               type: 'start',
-              user_id: member.user.id,
-              user_name: member.user.global_name,
+              user_id: user.id,
+              user_name: user.global_name,
             })
           }
         ),
@@ -57,7 +57,7 @@ export default async function handler(
           body: JSON.stringify({
             interaction_token: token,
             type: 'mint',
-            user_id: member.user.id,
+            user_id: user.id,
           })
         }
       )
