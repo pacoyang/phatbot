@@ -21,7 +21,7 @@ export default async function handler(
   }
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data
-    if (name === 'start') {
+    if (name === 'start' || name === 'info') {
       context.waitUntil(
         fetch(
           `${request.nextUrl.protocol}//${request.headers.get('host')}/api/run`,

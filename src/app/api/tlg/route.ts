@@ -8,7 +8,7 @@ import { generateToken, mint } from '@/utils'
 export async function POST(request: NextRequest) {
   const { message } = await request.json()
   console.info(message)
-  if (message && message.text === '/start') {
+  if (message && message.text === '/start' || message.text === '/info') {
     const tg_id = message.from.id
     const result = await kv.hget(TG_ID_CONTRACT_KEY, tg_id)
     if (result) {

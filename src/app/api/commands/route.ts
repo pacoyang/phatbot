@@ -9,13 +9,19 @@ export async function GET(request: NextRequest) {
   if (type === 'tg') {
     await bot.setMyCommands([
       { command: 'start', description:'Set up your wallet' },
-      { command: 'mint', description:'Send mint tx' }
+      { command: 'info', description:'Get your wallet info' },
+      { command: 'mint', description:'Send mint tx' },
     ])
   } else if (type === 'discord') {
     const commands = [
       {
         name: 'start',
         description: 'Set up your wallet',
+        type: 1,
+      },
+      {
+        name: 'info',
+        description: 'Get your wallet info',
         type: 1,
       },
       {
